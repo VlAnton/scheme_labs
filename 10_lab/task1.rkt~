@@ -1,0 +1,31 @@
+#lang racket
+
+
+(define (get-proper-number-value char)
+  (- (char->integer char) 48)
+  )
+
+(define (non-natural? number)
+  (cond
+    [(> number 9) #t]
+    [(< number 0) #t]
+    [else #f]
+    )
+  )
+
+(define (task1-better str)
+  (define list-of-chars (string->list str))
+  (if (non-empty-string? str)
+      (foldl (λ(char result)
+               (define number_value (get-proper-number-value char))
+
+               (cond
+                 [(not (exact-integer? result)) #f]
+                 [(non-natural? number_value) #f]
+                 [else (+ (* 10 result)  number_value)]
+                 )
+               ) 0 list-of-chars
+                 )
+      #f
+      )
+  )

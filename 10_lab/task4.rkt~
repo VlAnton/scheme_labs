@@ -1,0 +1,52 @@
+#lang racket
+
+(define (split str)
+  (define space #\space)
+
+  (foldr (λ(char result)
+           (define current_word (car result))
+           (define str_char (string char))
+           (define next_word (string-append str_char current_word))
+
+           (cond
+             [(not (equal? char space)) (cons next_word (cdr result))]
+             [(and (equal? char space) (not (non-empty-string? current_word)) result)]
+             [(equal? char space) (cons "" result)]
+             )
+           )
+         '("")
+         (string->list str)
+         )
+  )
+
+
+
+(define (find-dupes str)
+  (define list-of-words (split str))
+  (define idxs (range (length list-of-words)))
+
+  (foldl (λ(idx word result)
+           (define dupe
+             (foldl (λ(inner_idx inner_word inner_result)
+                      (cond
+                        [(non-empty-string? result) result]
+                        [(non-empty-string? inner_result) inner_result]
+                        [(and (not(equal? idx inner_idx)) (equal? inner_word word)) inner_word]
+                        [else #f]
+                        )
+                      )
+                    ""
+                    idxs
+                    list-of-words
+                    )
+             )
+           (cond
+             [(non-empty-string? result) result]
+             [else dupe]
+             )
+           )
+         ""
+         idxs
+         list-of-words
+         )
+  )
