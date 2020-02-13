@@ -1,33 +1,37 @@
 #lang racket
 
 
-(define (get-proper-number-value char)
-  (- (char->integer char) 48)
+(define (get-proper-number-value char)  ; возвращаем числовое значение символа
+  (- (char->integer char) 48)  ; вычитаем 48, потому что код символа 1 == 49, а нам нужно получить 1
   )
 
-(define (non-number? number)
-  (or (> number 9) (< number 0))
+(define (non-number? number)  ; проверяем что символ не цифра
+  (or (> number 9) (< number 0))  ; оно не цифра, если выходит за отрезок [0, 9]
   )
 
 (define (sum_of_numbers str)
-  (define res_pair (foldl (λ(char res)
-                            (define num_val (get-proper-number-value char))
-                            (define sum (car res))
-                            (define curr_num (cdr res))
+  (define res_pair
+    (foldl (λ(char res)  ; char — символ на текущей итерации, res — результат в формате (сумма_чисел . "строка, в которой набирается число")
+             (define num_val (get-proper-number-value char))  ; берём числовое значение текущего символа, помещаем переменную
+             (define sum (car res))  ; берём текущую сумму, помещаем в переменную
+             (define curr_num (cdr res))  ; берём текущее число, помещаем в переменную
 
-                            (if (non-number? num_val)
-                                (if (not (empty? (string->list curr_num)))
-                                    (cons (+ sum (string->number curr_num)) "")
-                                    (cons sum "")
-                                    )
-                                (cons sum (string-append curr_num (string char)))
-                                )
-                            ) (cons 0 "") (string->list str))
+             (if (non-number? num_val)  ; если текущий символ — не цифра
+                 (if (not (empty? (string->list curr_num)))  ; то проверяем, что текущее число не пустое
+                     (cons (+ sum (string->number curr_num)) "")  ; если не пустое, то преобразуем его к числу и прибавлем к сумме,
+                     ; возвращая пару (обновлённая_сумма . "")
+                     (cons sum "")  ; иначе возвращаем (текущая_сумма . "")
+                     )
+                 (cons sum (string-append curr_num (string char)))  ; если текущий символ — число, возвращаем пару
+                 ; (текущая_сумма . "текущее_число_плюс_текущий_символ")
+                 )
+             ) (cons 0 "") (string->list str))  ; на вход подаём пару из 0 и "" (результат), и список символов строки 
     )
-  (define sum (car res_pair))
-  (define num (cdr res_pair))
-  (if (and (empty? (string->list num)) (string->number num))
-      (+ sum (string->number num))
-      sum
+  ; вполне могло получиться, что в результате накопилось число, но не добавилось в сумму
+  (define sum (car res_pair))  ; запишем сумму в переменную
+  (define num (cdr res_pair))  ; запишем число в переменную
+  (if (not(empty? (string->list num)))  ; если число не пусто, то в нём точно число (не число туда попасть не может)
+      (+ sum (string->number num))  ; если это так, то возвращаем сумму + новое число
+      sum  ; если нет, то возвращаем сумму
       )
   )
