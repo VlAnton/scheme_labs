@@ -1,19 +1,30 @@
 #lang racket
 
 
-(define (sum_of_polynoms pol_1 pol_2)
-  (define max_min_pair
-     (if (= (max (length pol_1) (length pol_2)) (length pol_1))
-         (cons pol_1 pol_2)
-         (cons pol_2 pol_1)
+(define (get_max_polynom . polynoms)
+  (foldl
+   (λ(x res)
+     (if (> (length x) (length res))
+         x
+         res
          )
-     )
-  (define max_pol (car max_min_pair))
-  (define min_pol (cdr max_min_pair))
+     ) '() polynoms
+       )
+  )
 
-  (define min_pol_extension_length (- (length max_pol) (length min_pol)))
-  (define min_pol_extension (make-list min_pol_extension_length 0))
-  (define min_pol (append min_pol_extension min_pol))
+(define (extend_polynoms_by ext . polynoms)
+  (define max_polynom (apply get_max_polynom polynoms))
+  (map
+   (λ(polynom)
+     (define polynom_extension_length (- (length max_polynom) (length polynom)))
+     (define polynom_extension (make-list polynom_extension_length 0))
+     (append polynom_extension polynom)
+     ) polynoms
+       )
+  )
 
-  (map + max_pol min_pol)
+(define (sum_of_polynoms . polynoms)
+  (define extended_polynoms (apply extend_polynoms_by 0 polynoms))
+
+  (apply map + extended_polynoms)
   )
