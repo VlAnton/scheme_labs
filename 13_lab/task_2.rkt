@@ -12,7 +12,7 @@
        )
   )
 
-(define (extend_polynoms_by ext . polynoms)
+(define (extend_polynoms_by . polynoms)
   (define max_polynom (apply get_max_polynom polynoms))
   (map
    (λ(polynom)
@@ -24,7 +24,7 @@
   )
 
 (define (sum_of_polynoms . polynoms)
-  (define extended_polynoms (apply extend_polynoms_by 0 polynoms))
+  (define extended_polynoms (apply extend_polynoms_by polynoms))
 
   (apply map + extended_polynoms)
   )
