@@ -68,7 +68,7 @@
 
 
 ; 2 — сумма многочленов
-(define (sum_of_polynoms . polynoms) ". polynoms" означает, что в функцию может подаваться сколько угодно параметров
+(define (sum_of_polynoms . polynoms) ; ". polynoms" означает, что в функцию может подаваться сколько угодно параметров
   (define extended_polynoms (get_extend_polynoms polynoms))  ; составляем список расщиренных до максимального по длине полиномов
 
   (apply map + extended_polynoms)  ; (map + lst1 lst2 lst3...) возвращает список,
