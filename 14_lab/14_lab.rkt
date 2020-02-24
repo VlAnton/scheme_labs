@@ -78,6 +78,9 @@
 
 ; 5
 
-            
-       
-     
+(define (binary? tree)
+  (if (or (empty? tree) (leaf? tree))
+      #t
+      (and (= (length tree) 3) (binary? (cadr tree)) (binary? (caddr tree)))
+      )
+  )
