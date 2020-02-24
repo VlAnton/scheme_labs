@@ -22,30 +22,18 @@
 
 ; 3
 
-(define (max_tree tree1 tree2 tree3)
-  (define max_node (max (car tree1) (car tree2) (car tree3)))
-  (cond
-    [(= max_node (car tree1)) tree1]
-    [(= max_node (car tree2)) tree2]
-    [(= max_node (car tree3)) tree3]
-    )
-  )
-
 (define (max_in_tree tree)
-  (define (get_max_tree tree)
-    (cond
-      [(empty? tree) '(0)]
-      [(leaf? tree) tree]
-      [else
-       (max_tree
-        tree
-        (get_max_tree (cadr tree))
-        (get_max_tree (caddr tree))
-        )
-       ]
+  (cond
+    [(empty? tree) 0]
+    [(leaf? tree) (car tree)]
+    [else
+     (max
+      (car tree)
+      (max_in_tree (cadr tree))
+      (max_in_tree (caddr tree))
       )
+     ]
     )
-  (car (get_max_tree tree))
   )
 
 
