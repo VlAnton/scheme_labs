@@ -72,3 +72,33 @@
       (and (= (length tree) 3) (binary? (cadr tree)) (binary? (caddr tree)))
       )
   )
+
+
+; 1
+
+(define (get_triplets N_list)
+  (define triplets_list
+    (foldl
+     (λ(x res)
+       (define 0_part (car res))
+       (define 1_part (cadr res))
+       (define 2_part (caddr res))
+
+       (cond
+         [(= (remainder x 3) 0) (list (cons x 0_part) 1_part 2_part)]
+         [(= (remainder x 3) 1) (list 0_part (cons x 1_part) 2_part)]
+         [(= (remainder x 3) 2) (list 0_part 1_part (cons x 2_part))]
+         [else res]
+         )
+       ) '(() () ()) N_list
+         )
+    )
+  (if (not (ormap empty? triplets_list))
+      (apply cartesian-product triplets_list)
+      #f
+      )
+  )
+
+
+; 2
+
