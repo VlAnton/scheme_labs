@@ -94,7 +94,7 @@
          )
     )
   (if (not (ormap empty? triplets_list))
-      (apply cartesian-product triplets_list)
+      (apply cartesian-product triplets_list)  ; TODO: сделать свой cartesian-product, если будет время
       #f
       )
   )
@@ -102,3 +102,36 @@
 
 ; 2
 
+
+(define (get_full_path directories)
+
+  (define (get_path directories result)
+    (define list-head
+      (if (empty? directories)
+          #f
+          (car directories)
+          )
+      )
+    (define idx (index-of result list-head))
+    (cond
+      [(empty? directories) result]
+      [(and (number? idx)
+            (if (= (- (length result) idx) 2)
+                (get_path (cdr directories) (append (takef result (λ(x) (not (eq? x list-head)))) (list list-head)))
+                (get_path (cdr directories) (append result (list list-head)))
+                )
+        )]
+      [else (get_path (cdr directories) (append result (list list-head)))]
+      )
+    )
+
+  (define (get_starting_point directories)
+    (cond
+      [(empty? directories) #f]
+      [(eq? (car directories) "C:\\") (get_path directories '())]
+      [else (get_starting_point (cdr directories))]
+      )
+    )
+
+  (get_starting_point directories)
+  )
