@@ -11,136 +11,133 @@
 ; 1
 
 (define (get_triplets N_list)
-  (define triplets_list  ; заводим переменную, являющуюся списком вида: '((список чисел с остатком 0) (с остатком 1) (с остатком 2))
-    (foldl  ; получаем её значение с помощью следующего foldl
-     (λ(x res)  ; x — число из N_list, res — результирующий список вида, описанного выше
-       (define 0_part (car res))  ; (список чисел с остатком 0)
-       (define 1_part (cadr res))  ; (список чисел с остатком 1)
-       (define 2_part (caddr res))  ; (список чисел с остатком 2)
+  (define triplets_list
+    (foldl
+     (λ(x res)
+       (define 0_part (car res))
+       (define 1_part (cadr res))
+       (define 2_part (caddr res))
 
        (cond
-         [(= (remainder x 3) 0) (list (cons x 0_part) 1_part 2_part)]  ; если остаток от x / 3 == 0, добавляем x к 0_part 
-         [(= (remainder x 3) 1) (list 0_part (cons x 1_part) 2_part)]  ; аналогично с 1
-         [(= (remainder x 3) 2) (list 0_part 1_part (cons x 2_part))]  ; аналогично с 2
-         [else res]  ; эта строчка не нужна, написал просто так
+         [(= (remainder x 3) 0) (list (cons x 0_part) 1_part 2_part)]
+         [(= (remainder x 3) 1) (list 0_part (cons x 1_part) 2_part)]
+         [(= (remainder x 3) 2) (list 0_part 1_part (cons x 2_part))]
+         [else res]
          )
-       ) '(() () ()) N_list  ; на вход подаём '(()()()) — сюда будет записываться результат, и N_list
+       ) '(() () ()) N_list
          )
     )
-  (if (ormap empty? triplets_list)  ; если хоть один из списков в triplets_list пуст, то
-      #f  ; мы не можем составить тройки чисел и возвращаем #f
-      (apply cartesian-product triplets_list)  ; иначе, применяем функцию cartesian-product (декартово произведение)
-      ; к спискам из triplets_list с помощью apply
+  (if (ormap empty? triplets_list)
+      #f
+      (apply cartesian-product triplets_list)
       )
   )
 
 
 ; 2
 
-(define (last_element lst)
-  (if (empty? (cdr lst))
-      (car lst)
-      (last_element (cdr lst))
+(define (last-index lst element)
+  (define idxs (range (length lst)))
+  (define (iter lst idxs res)
+    (cond
+      [(empty? lst) res]
+      [(eq? (car lst) element) (iter (cdr lst) (cdr idxs) (cons (car idxs) res))]
+      [else (iter (cdr lst) (cdr idxs) res)]
+      )
+    )
+  (define result (iter lst idxs '()))
+  (if (empty? result)
+      #f
+      (car result)
       )
   )
 
 
 (define (get_full_path directories)
-  (define (get_path directories result)  ; тут происходит поиск пути
-    (define list-head  ; записываю голову списка заранее, потому что мы в конце доходим до момента,
-      ; когда список пуст и мы не можем взять car от списка, а он нам нужен строчкой ниже
-      (if (empty? directories)  ; если директория пустая,
-          #f  ; возвращаем #f
-          (car directories)  ; иначе, голову списка
-          )
-      )
-    (define idxs (indexes-of result list-head))  ; получаем список индексов последнего вхождения элемента в результирующий список,
-    ; либо #f, если его в результате нет
-    (define idx
-      (if (empty? idxs)
+  (define (get_path directories result)
+    (define list-head
+      (if (empty? directories)
           #f
-          (last_element idxs)
+          (car directories)
           )
       )
+    (define idx (last-index result list-head))
     
     (cond
-      [(empty? directories) result]  ; если дошли до конца списка директорий — возвращаем результат
-      [(and (number? idx) (= (- (length result) idx) 2))  ; если idx существует и длина результата минус idx == 2 (по условию это недопустимо)
-       (get_path (cdr directories) (append (take result idx) (list list-head)))  ; то мы обрезаем всё,
-       ; что было между старым индексом и новым и ставим добавляем к результату этот элемент
+      [(empty? directories) result]
+      [(and (number? idx) (= (- (length result) idx) 2))
+       (get_path (cdr directories) (append (take result idx) (list list-head)))
        ]
-      [else (get_path (cdr directories) (append result (list list-head)))]  ; иначе, всегда добавляем элемент к результату
+      [else (get_path (cdr directories) (append result (list list-head)))]
       )
     )
 
-  (define (get_starting_point directories)  ; мы идём по списку директорий, пока не найдём C:\
+  (define (get_starting_point directories)
     (cond
-      [(empty? directories) #f]  ; если список директорий закончился, то мы не нашли стартовую точку пути => возвращаем #f
-      [(eq? (car directories) "C:\\") (get_path directories '())]  ; если нашли, то запускаем поиск пути
-      [else (get_starting_point (cdr directories))]  ; иначе, продолжаем поиск стартовой точки
+      [(empty? directories) #f]
+      [(eq? (car directories) "C:\\") (get_path directories '())]
+      [else (get_starting_point (cdr directories))]
       )
     )
 
-  (get_starting_point directories)  ; запускается всё на этом моменте
+  (get_starting_point directories)
   )
 
 
 ; 3
 
-(define (max_in_tree tree)  ; функция, находящая максимум в дереве
+(define (max_in_tree tree)
   (cond
-    [(empty? tree) -inf.0]  ; база рекурсии — дерево пустое, возвращаем - бесконечность (максимально маленькое число, чтобы не сломать алгоритм)
-    [(leaf? tree) (car tree)]  ; если текущее дерево — лист, возвращаем голову дерево, то есть узел
-    [else  ; иначе,
-     (max  ; применяем рекурсивно max к 
-      (car tree)  ; текущему узлу
-      (max_in_tree (cadr tree))  ; вызову max_in_tree по левому поддереву
-      (max_in_tree (caddr tree))  ; вызову max_in_tree по правому поддереву
-      ; дело в том, что вызовы по левому и правому поддереву также будут возвращать узлы и в итоге мы найдём max среди всех узлов
+    [(empty? tree) -inf.0]
+    [(leaf? tree) (car tree)]
+    [else
+     (max
+      (car tree)
+      (max_in_tree (cadr tree))
+      (max_in_tree (caddr tree))
       )
      ]
     )
   )
 
 
-(define (get_summand node max_node)  ; функция, чтобы определить, что добавлять к результату на текущем вызове рекурсии
-  (if (= (car node) max_node)  ; если текущий узел равен максимальному, то 1, иначе 0
+(define (get_summand node max_node)
+  (if (= (car node) max_node)
       1
       0
       )
   )
 
 (define (count_maxes tree)
-  (define max_node (max_in_tree tree))  ; запоминаем максимальный узел
-  (define (count_recursion tree)  ; функция для рекурсивного подсчёта максимумов в дереве
+  (define max_node (max_in_tree tree))
+  (define (count_recursion tree)
     (cond
-      [(empty? tree) 0]  ; база рекурсии — дерево пустое, возвращаем 0
+      [(empty? tree) 0]
       [else
-       (let ([counter (get_summand tree max_node)])  ; с помощью let заводим переменную, содержащее 1 или 0 в зависимости от того,
-         ; равен ли текущий узел максимальному
+       (let ([counter (get_summand tree max_node)])
         (+
          counter
-         (count_recursion (cadr tree))  ; рекурсивно добавляем к рекурсивному вызову count_recursion от левого поддерева
-         (count_recursion (caddr tree))  ; и от правого
+         (count_recursion (cadr tree))
+         (count_recursion (caddr tree))
          )
         )
        ]
       )
     )
-  (count_recursion tree)  ; вызов рекурсии
+  (count_recursion tree)
   )
 
 
 ; 4
 
-(define (count_leaves tree)  ; подсчёт листов дерева
+(define (count_leaves tree)
   (cond
-    [(empty? tree) 0]  ; база рекурсии — дерево пустое (возвращаем 0)
-    [(leaf? tree) 1]  ; если встретили лист — возвращаем 1
-    [else  ; иначе,
-     (+  ; складываем
-      (count_leaves (cadr tree))  ; рекурсивные вызовы count_leaves от левого
-      (count_leaves (caddr tree))  ; и правого поддеревьев
+    [(empty? tree) 0]
+    [(leaf? tree) 1]
+    [else
+     (+
+      (count_leaves (cadr tree))
+      (count_leaves (caddr tree))
       )
      ]
     )
@@ -149,10 +146,10 @@
 
 ; 5
 
-(define (binary? tree)  ; проверка дерева на бинарность
-  (if (or (empty? tree) (leaf? tree))  ; база рекурсии — если дерево пустое, либо лист (по условию задачи это #t)
-      #t  ; тогда #t
-      (and (= (length tree) 3) (binary? (cadr tree)) (binary? (caddr tree)))  ; иначе, рекурсивно с помощью and получаем предикат,
-      ; проверяющий что длина текущего дерева и его поддеревьев равна 3 (то есть узел и два потомка)
-      )
+(define (binary? tree)
+  (cond
+    [(empty? tree) #t]
+    [(leaf? tree) (not (= (length tree) 3))]
+    [else (and (= (length tree) 3) (binary? (cadr tree)) (binary? (caddr tree)))]
+    )
   )
