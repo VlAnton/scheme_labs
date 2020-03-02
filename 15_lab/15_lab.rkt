@@ -91,3 +91,14 @@
      ]
     )
   )
+
+
+(define (min_leaf tree)
+  (cond
+    [(empty? tree) +inf.0]
+    [(leaf? tree) (car tree)]
+    [else
+     (min (min_leaf (left tree)) (min_leaf (right tree)))
+     ]
+    )
+  )
