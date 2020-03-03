@@ -93,6 +93,8 @@
   )
 
 
+; 4_task
+
 (define (min_leaf tree)
   (cond
     [(empty? tree) +inf.0]
@@ -100,5 +102,50 @@
     [else
      (min (min_leaf (left tree)) (min_leaf (right tree)))
      ]
+    )
+  )
+
+
+; 5_task
+
+
+
+(define (get_floor_hierarchy tree)
+  (define (rec tree)
+    (cond
+      [(empty? tree) tree]
+      [(leaf? tree) (car tree)]
+      [else
+       (let* ([rec_result (map rec (cdr tree))]
+              [nums (map
+                     (λ(x)
+                       (cond
+                         [(or (number? x) (empty? x)) x]
+                         [(list? x) (car x)]
+                         )
+                       ) rec_result
+                         )
+                    ]
+              [lists (map
+                      (λ(x)
+                        (cond
+                          [(empty? x) x]
+                          [else
+                           (cdr x)
+                           ]
+                          )
+                        ) (filter list? rec_result)
+                          )
+                     ]
+              [result (list (car tree) nums lists)]
+              )
+         result
+         )
+       ]
+      )
+    )
+  (cond
+    [(empty? tree) #f]
+    [else (rec tree)]
     )
   )
