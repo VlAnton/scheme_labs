@@ -3,55 +3,54 @@
 
 ; Общие
 
-(define left cadr)  ; возвращает левую ветку дерева
-(define right caddr)  ; возвращает правую ветку дерева
+(define left cadr)
+(define right caddr)
 
-(define (leaf? tree)  ; проверяет, лист ли дерево
+(define (leaf? tree)
   (andmap empty? (cdr tree))
   )
 
-(define (!= . elems)  ; написал для удобства )
+(define (!= . elems)
   (not (apply eq? elems))
   )
 
 
 ; task_1
 
-(define (get_current_result node left-node right-node)  ; возвращает результат на текущем шаге
+(define (get_current_result node left-node right-node)
   (cond
-    [(and (number? left-node) (= (remainder node left-node) 0)) node]  ; если левый значение — число (то есть узел), то проверяем что остаток
-    ; деления предыдущего узла на этот равен 0
-    [(and (number? right-node) (= (remainder node right-node) 0)) node]  ; аналогично с правым
-    [else #f]  ; иначе, возвращаем #f
+    [(and (number? left-node) (= (remainder node left-node) 0)) node]
+    [(and (number? right-node) (= (remainder node right-node) 0)) node]
+    [else #f]
     )
   )
   
 
 (define (func tree)
   (cond
-    [(or (empty? tree) (leaf? tree)) #f]  ; база рекурсии — текущее дерево пусто или лист, то #f
-    [else  ; иначе
-     (let* ([left-node  ; берём значение левого узла
+    [(or (empty? tree) (leaf? tree)) #f]
+    [else
+     (let* ([left-node
              (if (empty? (left tree))
-                 #f  ; если левое поддерево пусто, то узла нет и возвращаем #f
-                 (car (left tree))  ; иначе, возвращаем узел
+                 #f
+                 (car (left tree))
                  )
              ]
-            [right-node  ; аналогично с правым
+            [right-node
              (if (empty? (right tree))
                  #f
                  (car (right tree))
                  )
              ]
-            [current_res (get_current_result (car tree) left-node right-node)]  ; получаем текущий результат
-            [left_res (func (left tree))]  ; получаем результаты от левого
-            [right_res (func (right tree))]  ; и правого деревьев
+            [current_res (get_current_result (car tree) left-node right-node)]
+            [left_res (func (left tree))]
+            [right_res (func (right tree))]
             )
        (cond
-         [(number? current_res) current_res]  ; если текущий
-         [(number? left_res) left_res]  ; или левый
-         [(number? right_res) right_res]  ; или правый результаты являются числом, возвращаем их
-         [else #f]  ; иначе, #f
+         [(number? current_res) current_res]
+         [(number? left_res) left_res]
+         [(number? right_res) right_res]
+         [else #f]
          )
        )
      ]
@@ -63,12 +62,12 @@
 
 (define (symmetrical_btree tree)
   (cond
-    [(or (empty? tree) (leaf? tree)) tree]  ; база рекурсии — дерево лист или пусто, возвращаем его
-    [else  ; иначе, составляем на каждом шаге дерево вида
+    [(or (empty? tree) (leaf? tree)) tree]
+    [else
      (list
-      (car tree)  ; текущая голова дерева
-      (symmetrical_btree (right tree))  ; поддерево для правого дерева
-      (symmetrical_btree (left tree))  ; поддерево для левого дерева
+      (car tree)
+      (symmetrical_btree (right tree))
+      (symmetrical_btree (left tree))
       )
      ]
     )
@@ -78,17 +77,16 @@
 
 (define (count_left_branches tree)
   (cond
-    [(or (empty? tree) (leaf? tree)) 0]  ; база рекурсии — дерево пусто или лист, возвращаем 0
+    [(or (empty? tree) (leaf? tree)) 0]
     [else
-     (let ([summand  ; задаём значение слагаемому
-            (if (not (empty? (left tree)))  ; если левое поддерево непусто, то 1, иначе 0
+     (let ([summand
+            (if (not (empty? (left tree)))
                 1
                 0
                 )
             ]
            )
-       (+ summand (count_left_branches (left tree)) (count_left_branches (right tree)))  ; и прибавляем слагаемое к вызовам
-       ; от правого и левого деревьев
+       (+ summand (count_left_branches (left tree)) (count_left_branches (right tree)))
        )
      ]
     )
@@ -99,10 +97,10 @@
 
 (define (min_leaf tree)
   (cond
-    [(empty? tree) +inf.0]  ; база рекурсии — дерево пусто, возвращаем -бесконечность
-    [(leaf? tree) (car tree)]  ; дерево — лист, возвращаем его узел
+    [(empty? tree) +inf.0]
+    [(leaf? tree) (car tree)]
     [else
-     (min (min_leaf (left tree)) (min_leaf (right tree)))  ; возвращаем минимум вызовов от левых и правых поддеревьев
+     (min (min_leaf (left tree)) (min_leaf (right tree)))
      ]
     )
   )
@@ -111,21 +109,21 @@
 ; 5_task
 
 
-(define (generate_list lst)  ; генерирует итоговый результат
-  (define sorted-lst (sort lst < #:key cdr))  ; сортируем список по индексу
-  (define nodes (append (map car sorted-lst) (list -inf.0)))  ; берём оттуда список узлов + -inf.0, чтобы списки были одинаковой длины
-  (define i_s_original (map cdr sorted-lst))  ; список индексов
-  (define i_s_cut (append (cdr i_s_original) (list -inf.0)))  ; обрезаем список индексов, чтобы можно было сравнивать во время итерации
+(define (generate_list lst)
+  (define sorted-lst (sort lst < #:key cdr))
+  (define nodes (append (map car sorted-lst) (list -inf.0)))
+  (define i_s_original (map cdr sorted-lst))
+  (define i_s_cut (append (cdr i_s_original) (list -inf.0)))
 
-  (reverse  ; результат будет не в правильном порядке, поэтому ревёрсим его
-   (cdr  ; обрезаем -inf.0
+  (reverse
+   (cdr
     (foldl
-     (λ(node i i1 res)  ; node — текущий узел, i — его индекс, i1 — индекс текущего узла
+     (λ(node i i1 res)
        (cond
-         [(eq? i i1) (cons (append (car res) (list node)) (cdr res))]  ; если индексы равны, то прибавляем node к списку с такими же индексами
-         [else (cons (list node) res)] ; иначе, создадим в нашем списке списков список для нового индекса
+         [(eq? i i1) (cons (append (car res) (list node)) (cdr res))]
+         [else (cons (list node) res)]
          )
-       ) (list (list (car nodes))) (cdr nodes) i_s_cut i_s_original  ; на входе обрезаем nodes, а в результат помещаем первый его элемент
+       ) (list (list (car nodes))) (cdr nodes) i_s_cut i_s_original
          )
     )
    )
@@ -133,18 +131,17 @@
 
 
 (define (tree->list tree)
-  (define (iter-tree tree result i)  ; итерация по дереву
-    ; на каждом шаге увеличиваем i и к результату добавляем пару вида (текущий узел, его индекс)
-    (let* ([ltree (left tree)]  ; левое поддерево
-           [rtree (right tree)]  ; правое
+  (define (iter-tree tree result i)
+    (let* ([ltree (left tree)]
+           [rtree (right tree)]
            )
-      (if (empty? rtree)  ; если правое пусто
-          (if (empty? ltree)  ; и левое пусто
-              result  ; возвращаем результат
-              (iter-tree ltree (append result (list (cons (car ltree) i))) (+ i 1)))  ; иначе, итерируемся по левому
-          (if (empty? ltree)  ; если правое непусто, а левое пусто
-              (iter-tree rtree (append result (list (cons (car rtree) i))) (+ i 1))  ; итерируемся по правому
-              (append  ; иначе, они оба не пусты и итерируемся по обоим
+      (if (empty? rtree)
+          (if (empty? ltree)
+              result
+              (iter-tree ltree (append result (list (cons (car ltree) i))) (+ i 1)))
+          (if (empty? ltree)
+              (iter-tree rtree (append result (list (cons (car rtree) i))) (+ i 1))
+              (append
                (iter-tree ltree (append result (list (cons (car ltree) i))) (+ i 1))
                (iter-tree rtree (append result (list (cons (car rtree) i))) (+ i 1))
                )
@@ -152,10 +149,10 @@
           )
       )
     )
-  (if (empty? tree)  ; если дерево пустое, то по условию #f
+  (if (empty? tree)
       #f
-      (cons  ; иначе, генерируем список
-       (list (car tree))  ; голову приписываем сразу
+      (cons
+       (list (car tree))
        (generate_list (remove-duplicates (iter-tree tree '() 2)))
        )
       )
