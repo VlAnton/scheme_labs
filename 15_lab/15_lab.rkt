@@ -10,6 +10,10 @@
   (andmap empty? (cdr tree))
   )
 
+(define (!= . elems)  ; написал для удобства )
+  (not (apply eq? elems))
+  )
+
 
 ; task_1
 
@@ -106,10 +110,6 @@
 
 ; 5_task
 
-(define (!= . elems)  ; написал для удобства )
-  (not (apply eq? elems))
-  )
-
 
 (define (generate_list lst)  ; генерирует итоговый результат
   (define sorted-lst (sort lst < #:key cdr))  ; сортируем список по индексу
@@ -122,7 +122,7 @@
     (foldl
      (λ(node i i1 res)  ; node — текущий узел, i — его индекс, i1 — индекс текущего узла
        (cond
-         [(eq? i i1) (cons (cons node (car res)) (cdr res))]  ; если индексы равны, то прибавляем node к списку с такими же индексами
+         [(eq? i i1) (cons (append (car res) (list node)) (cdr res))]  ; если индексы равны, то прибавляем node к списку с такими же индексами
          [else (cons (list node) res)] ; иначе, создадим в нашем списке списков список для нового индекса
          )
        ) (list (list (car nodes))) (cdr nodes) i_s_cut i_s_original  ; на входе обрезаем nodes, а в результат помещаем первый его элемент
@@ -156,7 +156,7 @@
       #f
       (cons  ; иначе, генерируем список
        (list (car tree))  ; голову приписываем сразу
-       (generate_list (iter-tree tree '() 2))
+       (generate_list (remove-duplicates (iter-tree tree '() 2)))
        )
       )
   )
