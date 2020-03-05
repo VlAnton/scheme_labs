@@ -3,13 +3,8 @@
 
 ; Общие
 
-(define (left tree)  ; возвращает левую ветку дерева
-  (cadr tree)
-  )
-
-(define (right tree)  ; возвращает правую ветку дерева
-  (caddr tree)
-  )
+(define left cadr)  ; возвращает левую ветку дерева
+(define right caddr)  ; возвращает правую ветку дерева
 
 (define (leaf? tree)  ; проверяет, лист ли дерево
   (andmap empty? (cdr tree))
@@ -110,3 +105,58 @@
 
 
 ; 5_task
+
+(define (!= . elems)  ; написал для удобства )
+  (not (apply eq? elems))
+  )
+
+
+(define (generate_list lst)  ; генерирует итоговый результат
+  (define sorted-lst (sort lst < #:key cdr))  ; сортируем список по индексу
+  (define nodes (append (map car sorted-lst) (list -inf.0)))  ; берём оттуда список узлов + -inf.0, чтобы списки были одинаковой длины
+  (define i_s_original (map cdr sorted-lst))  ; список индексов
+  (define i_s_cut (append (cdr i_s_original) (list -inf.0)))  ; обрезаем список индексов, чтобы можно было сравнивать во время итерации
+
+  (reverse  ; результат будет не в правильном порядке, поэтому ревёрсим его
+   (cdr  ; обрезаем -inf.0
+    (foldl
+     (λ(node i i1 res)  ; node — текущий узел, i — его индекс, i1 — индекс текущего узла
+       (cond
+         [(eq? i i1) (cons (cons node (car res)) (cdr res))]  ; если индексы равны, то прибавляем node к списку с такими же индексами
+         [else (cons (list node) res)] ; иначе, создадим в нашем списке списков список для нового индекса
+         )
+       ) (list (list (car nodes))) (cdr nodes) i_s_cut i_s_original  ; на входе обрезаем nodes, а в результат помещаем первый его элемент
+         )
+    )
+   )
+  )
+
+
+(define (tree->list tree)
+  (define (iter-tree tree result i)  ; итерация по дереву
+    ; на каждом шаге увеличиваем i и к результату добавляем пару вида (текущий узел, его индекс)
+    (let* ([ltree (left tree)]  ; левое поддерево
+           [rtree (right tree)]  ; правое
+           )
+      (if (empty? rtree)  ; если правое пусто
+          (if (empty? ltree)  ; и левое пусто
+              result  ; возвращаем результат
+              (iter-tree ltree (append result (list (cons (car ltree) i))) (+ i 1)))  ; иначе, итерируемся по левому
+          (if (empty? ltree)  ; если правое непусто, а левое пусто
+              (iter-tree rtree (append result (list (cons (car rtree) i))) (+ i 1))  ; итерируемся по правому
+              (append  ; иначе, они оба не пусты и итерируемся по обоим
+               (iter-tree ltree (append result (list (cons (car ltree) i))) (+ i 1))
+               (iter-tree rtree (append result (list (cons (car rtree) i))) (+ i 1))
+               )
+              )
+          )
+      )
+    )
+  (if (empty? tree)  ; если дерево пустое, то по условию #f
+      #f
+      (cons  ; иначе, генерируем список
+       (list (car tree))  ; голову приписываем сразу
+       (generate_list (iter-tree tree '() 2))
+       )
+      )
+  )
