@@ -10,6 +10,10 @@
   (andmap empty? (cdr tree))
   )
 
+(define (!= . elems)  ; написал для удобства )
+  (not (apply eq? elems))
+  )
+
 
 ; task_1
 
@@ -105,10 +109,6 @@
 
 
 ; 5_task
-
-(define (!= . elems)  ; написал для удобства )
-  (not (apply eq? elems))
-  )
 
 
 (define (generate_list lst)  ; генерирует итоговый результат
