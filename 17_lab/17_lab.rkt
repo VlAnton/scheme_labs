@@ -68,3 +68,45 @@
 
 ; 4
 
+(define (get_sorted_children_roots root edges)
+  (sort (filter (λ(edge) (= (car edge) root)) edges)
+        <
+        #:key cdr
+        )
+  )
+
+(define left-child cdar)
+(define right-child cdadr)
+
+(define (build-tree edges)
+  (define sorted-edges (sort edges < #:key car))
+  (define (rec root edges)
+    (define children (get_sorted_children_roots root edges))
+    (cond
+      [(empty? children) (list root '() '())]
+      [else
+       (let* ([lroot (left-child children)]
+              [ltree (rec lroot (dropf edges (λ(edge) (= (cdr edge) lroot))))]
+              [rroot
+               (if (= (length children) 2)
+                   (right-child children)
+                   '()
+                   )
+               ]
+              [rtree
+               (if (number? rroot)
+                   (rec rroot (dropf edges (λ(edge) (= (cdr edge) rroot))))
+                   rroot
+                   )
+               ]
+              )
+         (list root ltree rtree)
+         )
+       ]
+      )
+    )
+  (if (empty? edges)
+      edges
+      (rec (caar sorted-edges) sorted-edges)
+      )
+  )
