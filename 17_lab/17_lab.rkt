@@ -28,16 +28,38 @@
 
 ; 2
 
+(define get_nodes flatten)
+
+(define (foldl-tree-cheat func acc tree)
+  (define nodes (get_nodes tree))
+  (foldl func acc tree)
+  )
+
 (define (foldl-tree func acc tree)
   (cond
-    [(empty? tree) acc]
-    [(leaf? tree) (func acc (car tree))]
+    [(leaf? tree) (func (car tree) acc)]
+    [(monotree? tree)
+     (let ([non-empty-subtree
+            (if (empty? (left tree))
+                (right tree)
+                (left tree)
+                )
+            ]
+           )
+     (foldl func
+            (func (car tree) acc)
+            (list
+             (foldl-tree func acc non-empty-subtree))
+            )
+       )
+     ]
     [else
      (foldl func
-            acc
-            (list (car tree)
-                  (foldl-tree func acc (left tree))
-                  (foldl-tree func acc (right tree)))
+            (func (car tree) acc)
+            (list
+             (foldl-tree func acc (left tree))
+             (foldl-tree func acc (right tree))
+             )
       )
      ]
     )
