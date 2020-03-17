@@ -14,53 +14,31 @@
 
 ; 1
 
-(define (tree-map func tree)
+(define (map-tree func tree)
   (cond
     [(empty? tree) tree]
     [(leaf? tree) (list (func (car tree)) '() '())]
     [else
      (list (func (car tree))
-           (tree-map func (left tree))
-           (tree-map func (right tree)))
+           (map-tree func (left tree))
+           (map-tree func (right tree)))
      ]
     )
   )
 
 ; 2
 
-(define get_nodes flatten)
 
-(define (foldl-tree-cheat func acc tree)
-  (define nodes (get_nodes tree))
-  (foldl func acc tree)
-  )
-
-(define (foldl-tree func acc tree)
+(define (foldl-tree func result tree)
   (cond
-    [(leaf? tree) (func (car tree) acc)]
-    [(monotree? tree)
-     (let ([non-empty-subtree
-            (if (empty? (left tree))
-                (right tree)
-                (left tree)
-                )
-            ]
-           )
-     (foldl func
-            (func (car tree) acc)
-            (list
-             (foldl-tree func acc non-empty-subtree))
-            )
-       )
-     ]
+    [(empty? tree) result]
+    [(leaf? tree) (func (car tree) result)]
     [else
-     (foldl func
-            (func (car tree) acc)
-            (list
-             (foldl-tree func acc (left tree))
-             (foldl-tree func acc (right tree))
-             )
-      )
+     (let* ([current_result (func (car tree) result)]
+            [left_result (foldl-tree func current_result (left tree))]
+            [right_result (foldl-tree func left_result (right tree))])
+       right_result
+       )
      ]
     )
   )
