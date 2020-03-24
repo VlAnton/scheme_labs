@@ -31,8 +31,7 @@
   (cond
     [(empty? lst) lst]
     [else
-     (let* ([partition (get-partition lst (car lst))]
-            [head (car lst)])
+     (let ([partition (get-partition lst (car lst))])
        (append
         (quick-sort (get-smaller partition))
         (get-equal partition)
