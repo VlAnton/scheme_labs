@@ -81,3 +81,80 @@
         )
       )
   )
+
+
+; 3
+
+(define (get-num-val byte)
+  (- byte 48)
+  )
+
+(define (is_number? byte)
+  (define num_val (get-num-val byte))
+  (and (>= num_val 0) (< num_val 10))
+  )
+
+(define (get-reversed-number digits)
+  (foldr (λ(x res) (+ x (* res 10))) 0 digits)
+  )
+
+
+(define (get-numbers-from file)
+  (define in (open-input-file file))
+  (define out (open-output-file "output.txt"))
+
+  (define (next)
+    (define byte (read-byte in))
+    (if (eq? byte eof)
+      byte
+      (if (is_number? byte)
+          (get-num-val byte)
+          #f
+          )
+      )
+    )
+  (define (iter-file output digits-list sum-of-numbers count-numbers)
+    (define data (next))
+
+    (cond
+      [(eq? data eof)
+       (append output
+               (list (number->string sum-of-numbers))
+               (list (number->string count-numbers)))
+       ]
+      [(number? data)
+       (iter-file output
+                  (cons data digits-list)
+                  sum-of-numbers
+                  count-numbers)
+       ]
+      [else
+       (let* ([num_value (get-reversed-number digits-list)]
+              [new_count
+               (if (empty? digits-list)
+                   count-numbers
+                   (+ 1 count-numbers)
+                   )
+               ]
+              [new-output
+               (if (empty? digits-list)
+                   output
+                   (append output (list (number->string num_value)))
+                   )
+               ])
+         (iter-file new-output
+                    '()
+                    (+ num_value sum-of-numbers)
+                    new_count
+                    )
+         )]
+      )
+    )
+  (define (write-out lines)
+    (for-each (λ(line) (writeln line out)) lines)
+    )
+
+  (write-out (iter-file '() '() 0 0))
+  (close-input-port in)
+  (close-output-port out)
+  )
