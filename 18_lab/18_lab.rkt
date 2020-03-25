@@ -32,11 +32,9 @@
     [(empty? lst) lst]
     [else
      (let ([partition (get-partition lst (car lst))])
-       (append
-        (quick-sort (get-smaller partition))
-        (get-equal partition)
-        (quick-sort (get-larger partition))
-        )
+       (append (quick-sort (get-smaller partition))
+               (get-equal partition)
+               (quick-sort (get-larger partition)))
        )
      ]
     )
@@ -57,10 +55,10 @@
 (define (sort-by-sum-of-digits lst)
   (cond
     [(empty? lst) lst]
-    [else (insert! (cons (sum-of-digits (car lst)) (car lst))
-                   (sort-by-sum-of-digits (cdr lst))
-                   )
-          ]
+    [else
+     (insert! (cons (sum-of-digits (car lst)) (car lst))
+              (sort-by-sum-of-digits (cdr lst)))
+     ]
     )
   )
 
@@ -74,9 +72,9 @@
              [current_element_sum (sum-of-digits current_element)])
         (cond
           [(< element_sum current_element_sum) (cons element_val lst)]
-          [(>= element_sum current_element_sum) (cons current_element
-                                                      (insert! element_pair (cdr lst)))
-                                                ]
+          [(>= element_sum current_element_sum)
+           (cons current_element (insert! element_pair (cdr lst)))
+           ]
           )
         )
       )
@@ -106,16 +104,16 @@
   (define (next)
     (define byte (read-byte in))
     (if (eq? byte eof)
-      byte
-      (if (is_number? byte)
-          (get-num-val byte)
-          #f
-          )
-      )
+        byte
+        (if (is_number? byte)
+            (get-num-val byte)
+            #f
+            )
+        )
     )
+
   (define (iter-file output digits-list sum-of-numbers count-numbers)
     (define data (next))
-
     (cond
       [(eq? data eof)
        (append output
@@ -129,27 +127,19 @@
                   count-numbers)
        ]
       [else
-       (let* ([num_value (get-reversed-number digits-list)]
-              [new_count
-               (if (empty? digits-list)
-                   count-numbers
-                   (+ 1 count-numbers)
-                   )
-               ]
-              [new-output
-               (if (empty? digits-list)
-                   output
-                   (append output (list (number->string num_value)))
-                   )
-               ])
-         (iter-file new-output
-                    '()
-                    (+ num_value sum-of-numbers)
-                    new_count
-                    )
-         )]
+       (let ([num_value (get-reversed-number digits-list)])
+         (if (empty? digits-list)
+             (iter-file output digits-list sum-of-numbers count-numbers)
+             (iter-file (append output (list (number->string num_value)))
+                        '()
+                        (+ num_value sum-of-numbers)
+                        (+ 1 count-numbers))
+             )
+         )
+       ]
       )
     )
+
   (define (write-out lines)
     (for-each (λ(line) (writeln line out)) lines)
     )
