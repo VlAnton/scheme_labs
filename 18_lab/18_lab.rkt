@@ -99,7 +99,7 @@
 
 (define (get-numbers-from file)
   (define in (open-input-file file))
-  (define out (open-output-file "output.txt"))
+  (define out (open-output-file #:exists 'replace "output.txt"))
 
   (define (next)
     (define byte (read-byte in))
@@ -141,10 +141,86 @@
     )
 
   (define (write-out lines)
-    (for-each (λ(line) (writeln line out)) lines)
+    (for-each (λ(line) (fprintf out "~a\n" line)) lines)
     )
 
   (write-out (iter-file '() '() 0 0))
   (close-input-port in)
   (close-output-port out)
+  )
+
+; 5
+
+(define cyrillic_bytes_segment (cons 1040 1103))
+(define latinic_bytes_segment (cons 65 122))
+
+
+(define (letter? char)  
+  (define byte_val (char->integer char))
+  (define cyrillic?
+    (and (>= byte_val (car cyrillic_bytes_segment))
+         (<= byte_val (cdr cyrillic_bytes_segment)))
+    )
+  (define latinic?
+    (and (>= byte_val (car latinic_bytes_segment))
+         (<= byte_val (cdr latinic_bytes_segment)))
+    )
+
+  (or cyrillic? latinic?)
+  )
+
+(define (empty-word? word)
+  (= (string-length word) 0)
+  )
+      
+
+(define (translate original_file dictionary_file)
+  (define original_port (open-input-file original_file))
+  (define dictionary (map
+                      (λ(k_v)
+                        (define k_v_pair (string-split k_v " "))
+                        (define key (car k_v_pair))
+                        (define value (cadr k_v_pair))
+
+                        (cons key value)
+                        )
+                      (port->lines (open-input-file dictionary_file))
+                      )
+    )
+  (define out (open-output-file #:exists 'replace "output.txt"))
+
+  (define (next) (read-char original_port))
+
+  (define key caar)
+  (define value cdar)
+  (define (get-translation word dict)
+    (cond
+      [(empty? dict) word]
+      [(eq? word (key dict)) (value dict)]
+      [else (get-translation word (cdr dict))]
+      )
+    )
+
+  (define (iter-file word)
+    (define char (next))
+    (cond
+      [(eq? char eof)
+       (begin
+         (close-input-port original_port)
+         (close-output-port out))
+       ]
+      [(letter? char) (iter-file (string-append word (string char)))]
+      [else
+       (begin (define written
+                (if (empty-word? word)
+                    char
+                    (string-append (get-translation word dictionary) (string char))
+                    )
+                )
+              (fprintf out "~a" written)
+              (iter-file ""))
+       ]
+      )
+    )
+  (iter-file "")
   )
