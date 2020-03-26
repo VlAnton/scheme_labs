@@ -1,5 +1,32 @@
 #lang racket
 
+; Вспомогательные функции
+
+(define (empty-word? word)
+  (= (string-length word) 0)
+  )
+
+(define (letter? char)
+  (define cyrillic_bytes_segment (cons 1040 1103))
+  (define latinic_bytes_segment (cons 65 122))
+  (define byte_val (char->integer char))
+
+  (define cyrillic?
+    (and (>= byte_val (car cyrillic_bytes_segment))
+         (<= byte_val (cdr cyrillic_bytes_segment)))
+    )
+  (define latin?
+    (and (>= byte_val (car latinic_bytes_segment))
+         (<= byte_val (cdr latinic_bytes_segment)))
+    )
+
+  (or cyrillic? latin?)
+  )
+
+(define (word? word)
+  (andmap letter? (string->list))
+  )
+
 
 ; 1
 
@@ -96,7 +123,6 @@
   (foldr (λ(x res) (+ x (* res 10))) 0 digits)
   )
 
-
 (define (get-numbers-from file)
   (define in (open-input-file file))
   (define out (open-output-file #:exists 'replace "output.txt"))
@@ -149,30 +175,54 @@
   (close-output-port out)
   )
 
-; 5
+; 4
 
-(define cyrillic_bytes_segment (cons 1040 1103))
-(define latinic_bytes_segment (cons 65 122))
+(define (squash-words file)
+  (define in (open-input-file file))
+  (define out (open-output-file #:exists 'replace "output.txt"))
 
+  (define (next) (read-char in))        
 
-(define (letter? char)  
-  (define byte_val (char->integer char))
-  (define cyrillic?
-    (and (>= byte_val (car cyrillic_bytes_segment))
-         (<= byte_val (cdr cyrillic_bytes_segment)))
+  (define (iter-file word)
+    (define char (next))
+    (cond
+      [(eq? char eof)
+       (begin
+         (close-input-port in)
+         (close-output-port out))
+       ]
+      [(letter? char) (iter-file (string-append word (string char)))]
+      [(not (equal? char #\-))
+       (begin
+         (define last-idx
+           (if (empty-word? word)
+               0
+               (- (string-length word) 1))
+           )
+         (define char-list (string->list word))
+         (define last-char
+           (if (empty-word? word)
+               #f
+               (car (drop char-list last-idx))
+               )
+           )
+         (define written
+           (cond
+             [(and (equal? last-char #\-) (equal? char #\newline)) (apply string (take char-list last-idx))]
+             [else (string-append word (string char))]
+             )
+           )
+         (fprintf out "~a" written)
+         (iter-file ""))
+       ]
+      [else (iter-file (string-append word (string char)))]
+      )
     )
-  (define latinic?
-    (and (>= byte_val (car latinic_bytes_segment))
-         (<= byte_val (cdr latinic_bytes_segment)))
-    )
-
-  (or cyrillic? latinic?)
-  )
-
-(define (empty-word? word)
-  (= (string-length word) 0)
+  (iter-file "")
   )
       
+
+; 5
 
 (define (translate original_file dictionary_file)
   (define original_port (open-input-file original_file))
@@ -196,7 +246,7 @@
   (define (get-translation word dict)
     (cond
       [(empty? dict) word]
-      [(eq? word (key dict)) (value dict)]
+      [(equal? word (key dict)) (value dict)]
       [else (get-translation word (cdr dict))]
       )
     )
