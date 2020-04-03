@@ -23,11 +23,6 @@
   (or cyrillic? latin?)
   )
 
-(define (word? word)
-  (andmap letter? (string->list))
-  )
-
-
 ; 1
 
 (define (head-or-false lst)
@@ -40,6 +35,7 @@
 (define (get-partition lst head)
   (define (iter smaller equal larger lst)
     (define current_head (head-or-false lst))
+
     (cond
       [(empty? lst) (list smaller equal larger)]
       [(< current_head head) (iter (cons current_head smaller) equal larger (cdr lst))]
@@ -47,6 +43,7 @@
       [(> current_head head) (iter smaller equal (cons current_head larger) (cdr lst))]
       )
     )
+
   (iter '() '() '() lst)
   )
 
@@ -73,19 +70,18 @@
   (define (inner_func number)
     (if (< number 10)
         number
-        (+ (remainder number 10) (sum-of-digits (quotient number 10)))
+        (+ (remainder number 10)
+           (inner_func (quotient number 10)))
         )
     )
-  (abs (inner_func number))
+  (inner_func (abs number))
   )
 
 (define (sort-by-sum-of-digits lst)
-  (cond
-    [(empty? lst) lst]
-    [else
-     (insert! (cons (sum-of-digits (car lst)) (car lst))
-              (sort-by-sum-of-digits (cdr lst)))
-     ]
+  (if (empty? lst)
+      lst
+      (insert! (cons (sum-of-digits (car lst)) (car lst))
+               (sort-by-sum-of-digits (cdr lst)))
     )
   )
 
@@ -94,14 +90,13 @@
   (define element_val (cdr element_pair))
 
   (if (empty? lst)
-      (cons element_val lst)
+      (list element_val)
       (let* ([current_element (car lst)]
              [current_element_sum (sum-of-digits current_element)])
         (cond
-          [(< element_sum current_element_sum) (cons element_val lst)]
-          [(>= element_sum current_element_sum)
-           (cons current_element (insert! element_pair (cdr lst)))
-           ]
+          [(>= element_sum current_element_sum) (cons element_val lst)]
+          [(< element_sum current_element_sum) (cons current_element
+                                                     (insert! element_pair (cdr lst)))]
           )
         )
       )
@@ -177,50 +172,60 @@
 
 ; 4
 
+
+(define (skip-spaces in out char)
+  (define tab? (equal? char #\tab))
+  (define space? (equal? char #\space))
+  (define newline? (equal? char #\newline))
+
+  (if (or tab? space? newline?)
+      (skip-spaces in out (read-char in))
+      (fprintf out "~a" (string char))
+      )
+  )
+
 (define (squash-words file)
   (define in (open-input-file file))
   (define out (open-output-file #:exists 'replace "output.txt"))
 
-  (define (next) (read-char in))        
+  (define (next) (read-char in))
 
-  (define (iter-file word)
+  (define (iter-file word shifted?)
     (define char (next))
+    (define last-idx
+      (if (empty-word? word)
+          0
+          (- (string-length word) 1))
+      )
+    (define char-list (string->list word))
+    (define last-char
+      (if (empty-word? word)
+          #f
+          (car (drop char-list last-idx))
+          )
+      )
     (cond
       [(eq? char eof)
        (begin
+         (if (not (empty-word? word))
+             (fprintf out "~a" word)
+             (void))
          (close-input-port in)
          (close-output-port out))
        ]
-      [(letter? char) (iter-file (string-append word (string char)))]
-      [(not (equal? char #\-))
-       (begin
-         (define last-idx
-           (if (empty-word? word)
-               0
-               (- (string-length word) 1))
-           )
-         (define char-list (string->list word))
-         (define last-char
-           (if (empty-word? word)
-               #f
-               (car (drop char-list last-idx))
-               )
-           )
-         (define written
-           (cond
-             [(and (equal? last-char #\-) (equal? char #\newline)) (apply string (take char-list last-idx))]
-             [else (string-append word (string char))]
-             )
-           )
-         (fprintf out "~a" written)
-         (iter-file ""))
+      [(and (equal? last-char #\-) (equal? char #\newline)) (iter-file (apply string (take char-list last-idx)) #t)]
+      [(letter? char) (iter-file (string-append word (string char)) shifted?)]
+      [(equal? char #\-) (iter-file (string-append word (string char)) shifted?)]
+      [shifted?
+       (fprintf out "~a\n" word)
+       (skip-spaces in out char)
+       (iter-file "" #f)
        ]
-      [else (iter-file (string-append word (string char)))]
+      [else (iter-file (string-append word (string char)) #f)]
       )
     )
-  (iter-file "")
+  (iter-file "" #f)
   )
-      
 
 ; 5
 
