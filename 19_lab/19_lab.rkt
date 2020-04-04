@@ -40,8 +40,7 @@
       [(equal? byte eof)
        (begin
          (fprintf out "~a" str)
-         (close-input-port in)
-         (close-output-port out))
+         (close-ports in out))
        ]
       [(digit? byte)
        (begin
@@ -81,11 +80,7 @@
     (define byte (next))
 
     (cond
-      [(eq? byte eof)
-       (begin
-         (close-input-port in)
-         (close-output-port out))
-       ]
+      [(eq? byte eof) (close-ports in out)]
       [(percent? byte) (insert-word? "%" words)]
       [else
        (begin
@@ -99,7 +94,7 @@
   )
 
 
-; 3
+; 2
 
 
 (define (number->list n)
@@ -165,3 +160,6 @@
     )
   (iter-file '())
   )
+
+
+; 3
