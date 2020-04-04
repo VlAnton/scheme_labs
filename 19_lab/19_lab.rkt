@@ -16,6 +16,11 @@
   (= byte 37)
   )
 
+(define (close-ports in out)
+  (close-input-port in)
+  (close-output-port out)
+  )
+
 (define (format filename . words)
   (define in (open-input-file filename))
   (define out (open-output-file #:exists 'replace "output.txt"))
@@ -94,4 +99,69 @@
   )
 
 
-       
+; 3
+
+
+(define (number->list n)
+  (if (< n 10)
+      (list n)
+      (append (number->list (quotient n 10)) (list (remainder n 10)))
+      )
+  )
+
+(define (ascending? number)
+  (define digits (number->list number))
+  (define (rec digit digits)
+    (if (empty? digits)
+        #t
+        (and (<= digit (car digits)) (rec (car digits) (cdr digits)))
+        )
+    )
+  (rec (car digits) (cdr digits))
+  )
+
+(define (get_sums filename)
+  (define in (open-input-file filename))
+  (define out (open-output-file #:exists 'replace "output.txt"))
+
+  (define (next) (read-line in))
+  (define (get_sum)
+    (define line (next))
+    (if (equal? line eof)
+        eof
+        (begin
+          (foldl + 0 (map string->number (string-split line "+")))
+          )
+        )
+    )
+  (define (insert number lst)
+    (define (rec lst)
+      (if (empty? lst)
+          (list number)
+          (cond
+            [(>= number (car lst)) (cons number lst)]
+            [(< number (car lst)) (cons (car lst)
+                                        (rec (cdr lst)))]
+            )
+          )
+      )
+    (iter-file (rec lst))
+  )
+  (define (write-out sums)
+    (for-each (λ(line) (fprintf out "~a\n" line)) sums)
+    )
+
+  (define (iter-file sums)
+    (define sum (get_sum))
+    (cond
+      [(equal? sum eof)
+       (begin
+         (write-out sums)
+         (close-ports in out))
+       ]
+      [(ascending? (abs sum)) (insert sum sums)]
+      [else (iter-file sums)]
+      )
+    )
+  (iter-file '())
+  )
