@@ -163,3 +163,77 @@
 
 
 ; 3
+
+(define define_list (string->list "define"))
+
+(define (eof? char) (equal? char eof))
+(define (open-bracket? char) (equal? char #\())
+(define (close-bracket? char) (equal? char #\)))
+(define (d? char) (equal? char #\d))
+(define (define? str) (equal? str "define"))
+
+(define (member? element lst)
+  (list? (member element lst)))
+
+
+(define (count-functions filename)
+  (define in (open-input-file filename))
+  (define (next) (read-char in))
+
+  (define (iter-file count)
+    (define char (next))
+
+    (define (write-count)
+      (begin
+        (display count)
+        (close-input-port in))
+      )
+
+    (define (stage-four)
+      (define char (next))
+      (cond
+        [(eof? char) (write-count)]
+        [(close-bracket? char) (iter-file (+ count 1))]
+        [else (stage-four)]
+        )
+      )
+
+    (define (stage-three)
+      (define char (next))
+      (cond
+        [(eof? char) (write-count)]
+        [(open-bracket? char) (iter-file count)]
+        [(close-bracket? char) (stage-four)]
+        [else (stage-three)]
+        )
+      )
+    (define (stage-two str)
+      (define char (next))
+      (cond
+        [(eof? char) (write-count)]
+        [(member? char define_list) (stage-two (string-append str (string char)))]
+        [else
+         (if (define? str)
+             (stage-one #t)
+             (iter-file count))
+         ]
+        )
+      )
+
+    (define (stage-one in?)
+      (define char (next))
+      (cond
+        [(eof? char) (write-count)]
+        [(and (not in?) (d? char)) (stage-two "d")]
+        [(and in? (open-bracket? char)) (stage-three)]
+        [else (stage-one in?)]
+        )
+      )
+    (cond
+      [(eof? char) (write-count)]
+      [(open-bracket? char) (stage-one #f)]
+      [else (iter-file count)]
+      )
+    )
+  (iter-file 0)
+  )
