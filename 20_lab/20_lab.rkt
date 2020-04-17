@@ -54,7 +54,7 @@
   )
 
 
-; 2 — работает вроде
+; 2
 
 (define (multiple? node nodes)
   (and (not_member? node nodes) (boolean? (check-duplicates nodes)))
